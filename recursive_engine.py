@@ -90,7 +90,10 @@ class NaiveEngine(RecursiveEngine):
 
         # Compute terms
         laplacian = self.compute_laplacian(self.mu)
-        cubic = self.mu ** 3
+
+        # Clip mu to prevent overflow in cubic term
+        mu_clipped = np.clip(self.mu, -100.0, 100.0)
+        cubic = mu_clipped ** 3
         momentum = self.mu - self.mu_prev
 
         # Input perturbation
@@ -104,6 +107,9 @@ class NaiveEngine(RecursiveEngine):
                   p.dt * p.lam * cubic +
                   p.dt * p.rho * momentum +
                   p.dt * input_term)
+
+        # Clip output to prevent runaway
+        mu_new = np.clip(mu_new, -100.0, 100.0)
 
         # Update state
         self.mu_prev = self.mu.copy()
@@ -131,12 +137,18 @@ class VectorizedEngine(RecursiveEngine):
         # Input perturbation
         input_term = 0.0 if input_vec is None else p.eta * input_vec
 
+        # Clip mu to prevent overflow in cubic term
+        mu_clipped = np.clip(self.mu, -100.0, 100.0)
+
         # Single vectorized update
         mu_new = (self.mu +
                   p.dt * (p.g * laplacian -
-                          p.lam * self.mu**3 +
+                          p.lam * mu_clipped**3 +
                           p.rho * (self.mu - self.mu_prev)) +
                   p.dt * input_term)
+
+        # Clip output to prevent runaway
+        mu_new = np.clip(mu_new, -100.0, 100.0)
 
         self.mu_prev = self.mu
         self.mu = mu_new
@@ -171,12 +183,18 @@ class FFTEngine(RecursiveEngine):
 
         input_term = 0.0 if input_vec is None else p.eta * input_vec
 
+        # Clip mu to prevent overflow in cubic term
+        mu_clipped = np.clip(self.mu, -100.0, 100.0)
+
         # Update
         mu_new = (self.mu +
                   p.dt * (p.g * laplacian -
-                          p.lam * self.mu**3 +
+                          p.lam * mu_clipped**3 +
                           p.rho * (self.mu - self.mu_prev)) +
                   p.dt * input_term)
+
+        # Clip output to prevent runaway
+        mu_new = np.clip(mu_new, -100.0, 100.0)
 
         self.mu_prev = self.mu
         self.mu = mu_new
@@ -224,12 +242,18 @@ if TORCH_AVAILABLE:
                 else:
                     input_term = p.eta * input_vec
 
+            # Clip mu to prevent overflow in cubic term
+            mu_clipped = torch.clamp(self.mu, -100.0, 100.0)
+
             # All operations on GPU
             mu_new = (self.mu +
                       p.dt * (p.g * laplacian -
-                              p.lam * self.mu**3 +
+                              p.lam * mu_clipped**3 +
                               p.rho * (self.mu - self.mu_prev)) +
                       p.dt * input_term)
+
+            # Clip output to prevent runaway
+            mu_new = torch.clamp(mu_new, -100.0, 100.0)
 
             self.mu_prev = self.mu.clone()
             self.mu = mu_new
