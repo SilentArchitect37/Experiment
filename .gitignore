@@ -48,3 +48,10 @@ Thumbs.db
 *.gif
 *.mp4
 *.avi
+
+# Persistence checkpoints
+checkpoints/
+test_checkpoints/
+test_tmp/
+demo_checkpoints/
+*.npz
