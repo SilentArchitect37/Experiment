@@ -65,6 +65,8 @@ recursive_engine.py            # Core dynamics engine with optimizations
 emission_detector.py           # Entropy/coherence-based emission detection
 dialogue_system.py             # Full integrated system (TDL + LoMI + I²)
 external_data_validator.py     # Multi-dimensional truth validation for external data
+information_retrieval.py       # Active information search with validation
+dialogue_with_retrieval.py     # Integration: Dialogue + autonomous search
 advanced_engine.py             # RK4 integration and advanced numerical methods
 benchmark.py                   # Performance benchmarks
 requirements.txt               # Dependencies
@@ -162,6 +164,53 @@ truth_score, uncertainty, accept = validator.validate(claim)
 ```
 
 See [EXTERNAL_DATA_VALIDATION.md](EXTERNAL_DATA_VALIDATION.md) for complete mathematical details.
+
+#### 5. Information Retrieval System (`information_retrieval.py`)
+
+Active information search with autonomous validation - the system can now **search for information when needed**:
+
+**Capabilities:**
+
+- 🔍 **Search**: Queries multiple sources (web, databases, APIs)
+- ✓ **Validate**: Judges truthfulness using the 6-dimensional framework
+- 📊 **Aggregate**: Combines information from multiple sources
+- 🎯 **Resolve**: Handles contradictions by weighing credibility
+- 🤖 **Autonomous**: Detects knowledge gaps and searches automatically
+- 🧠 **Learn**: Builds knowledge graph from validated information
+
+```python
+from information_retrieval import InformationRetriever, InformationNeed
+
+# Create retriever
+retriever = InformationRetriever()
+
+# Autonomous search - system decides when and what to search
+result = retriever.autonomous_search(
+    "quantum entanglement",
+    confidence_threshold=0.7
+)
+
+if result:
+    print(f"Found: {result.content}")
+    print(f"Truth score: {result.truth_score}")
+    print(f"Sources: {len(result.sources)}")
+```
+
+**Integration with Dialogue:**
+
+```python
+# Dialogue agent with autonomous information retrieval
+from dialogue_with_retrieval import IntelligentDialogueAgent
+
+agent = IntelligentDialogueAgent(confidence_threshold=0.7)
+
+# Agent automatically searches and validates when needed
+response = agent.process_query("What causes climate change?")
+print(f"Confidence: {response['confidence']:.3f}")
+print(f"Sources: {', '.join(response['sources'])}")
+```
+
+See `dialogue_with_retrieval.py` for complete integration example.
 
 ## Installation
 
