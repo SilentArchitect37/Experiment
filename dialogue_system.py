@@ -21,6 +21,7 @@ from recursive_engine import (
 from emission_detector import (
     EmissionDetector, EmissionConfig, PhaseCoherenceDetector
 )
+from persistence import DialoguePersistence, IdleMonitor, create_auto_save_callback
 
 
 @dataclass
@@ -42,6 +43,13 @@ class DialogueConfig:
 
     # Feedback parameters
     feedback_decay: float = 0.9  # How much previous emission affects next state
+
+    # Persistence parameters
+    enable_persistence: bool = False  # Enable idle persistence
+    checkpoint_dir: str = './checkpoints'  # Directory for checkpoints
+    auto_checkpoint_interval: int = 1000  # Auto-save every N steps (0 = disabled)
+    idle_threshold_steps: int = 100  # Steps without emission to trigger idle save
+    idle_timeout_seconds: float = 30.0  # Wall-clock time to trigger idle save
 
     def __post_init__(self):
         if self.engine_params is None:
@@ -226,6 +234,20 @@ class RecursiveDialogueEngine:
         self.emission_history = []
         self.t = 0
 
+        # Persistence layer (optional)
+        self.persistence = None
+        self.idle_monitor = None
+        if self.config.enable_persistence:
+            self.persistence = DialoguePersistence(base_dir=self.config.checkpoint_dir)
+            self.idle_monitor = IdleMonitor(
+                idle_threshold_steps=self.config.idle_threshold_steps,
+                idle_timeout_seconds=self.config.idle_timeout_seconds
+            )
+            # Register auto-save callback
+            self.idle_monitor.register_idle_callback(
+                create_auto_save_callback(self.persistence, 'auto_idle')
+            )
+
     def _init_codebook(self) -> np.ndarray:
         """
         Initialize codebook for μ → token decoding.
@@ -304,6 +326,7 @@ class RecursiveDialogueEngine:
 
         self.t += 1
 
+        emission = None
         if should_emit:
             # Decode to token
             token_id, token_scores = self.decode_token(mu_new)
@@ -337,9 +360,11 @@ class RecursiveDialogueEngine:
                         import torch
                         self.engine.mu = self.engine.mu + torch.tensor(feedback, device=self.engine.device) * 0.1
 
-            return emission
+        # Update idle monitor if persistence enabled
+        if self.idle_monitor is not None:
+            self.idle_monitor.update_activity(self.t, emission_occurred=(emission is not None))
 
-        return None
+        return emission
 
     def converse(self, n_steps: int = 500,
                  listener_callback: Optional[Callable[[int], np.ndarray]] = None,
@@ -364,6 +389,8 @@ class RecursiveDialogueEngine:
             print(f"State dims: {self.config.state_dims}")
             print(f"Vocab size: {self.config.vocab_size}")
             print(f"Optimization: {self.config.engine_optimization}")
+            if self.config.enable_persistence:
+                print(f"Persistence: Enabled (checkpoints → {self.config.checkpoint_dir})")
             print()
 
         start_time = time.time()
@@ -385,6 +412,24 @@ class RecursiveDialogueEngine:
                     token = emission['token']
                     coh = emission['coherence']
                     print(f"t={t:4d} → Token {token:4d}  |  Coherence: {coh:.4f}")
+
+            # Auto-checkpoint if enabled
+            if (self.persistence is not None and
+                self.config.auto_checkpoint_interval > 0 and
+                self.t % self.config.auto_checkpoint_interval == 0 and
+                self.t > 0):
+                checkpoint_name = f"auto_step_{self.t}"
+                self.persistence.save(self, name=checkpoint_name, include_full_history=False)
+                if verbose:
+                    print(f"[Checkpoint] Auto-saved at step {self.t}")
+
+            # Check for idle state
+            if self.idle_monitor is not None and self.idle_monitor.check_idle(self.t):
+                if verbose:
+                    print(f"[Idle Detected] Steps since last emission: {self.t - self.idle_monitor.last_emission_step}")
+                self.idle_monitor.on_idle(self)
+                # Reset idle timer after handling
+                self.idle_monitor.update_activity(self.t, emission_occurred=False)
 
         elapsed = time.time() - start_time
 
