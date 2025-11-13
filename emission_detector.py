@@ -300,6 +300,116 @@ class PhaseCoherenceDetector(EmissionDetector):
         return False, diagnostics
 
 
+class WhisperCoherenceDetector(PhaseCoherenceDetector):
+    """
+    Whisper Detector - Private Channel with Lower LoMI Requirements
+
+    Unlike normal speech (which requires peak coherence with listener),
+    whispers emit when coherence is MODERATE - representing tentative
+    thoughts, internal reflections, or partial ideas that don't need
+    full mutual identity validation.
+
+    Emission modes:
+    - Normal speech: coherence > high_threshold (strong LoMI)
+    - Whisper: low_threshold < coherence <= high_threshold (partial LoMI)
+    - Silence: coherence < low_threshold (no coherence)
+    """
+
+    def __init__(self, config: Optional[EmissionConfig] = None,
+                 whisper_coherence_low: float = -5.0,
+                 whisper_coherence_high: float = -1.0):
+        super().__init__(config)
+
+        # Whisper operates in intermediate coherence range
+        # Remember: coherence = -||μₛ - μₗ||², so higher (closer to 0) = more coherent
+        self.whisper_low = whisper_coherence_low   # Lower bound for whisper
+        self.whisper_high = whisper_coherence_high # Upper bound for whisper
+
+        # Separate tracking for whispers
+        self.whisper_emissions = 0
+        self.steps_since_whisper = 0
+        self.whisper_cooldown = max(3, self.config.cooldown_steps // 3)  # Shorter cooldown
+
+    def should_emit(self, mu: np.ndarray, t: int) -> Tuple[bool, dict]:
+        """
+        Check for both normal speech and whisper emissions.
+
+        Returns:
+            (should_emit, diagnostics)
+            diagnostics['emission_type'] = 'speech' | 'whisper' | None
+        """
+        coherence = self.compute_coherence(mu)
+        self.coherence_history.append(coherence)
+        self.steps_since_emission += 1
+        self.steps_since_whisper += 1
+
+        diagnostics = {
+            'coherence': coherence,
+            'energy': self.compute_energy(mu),
+            'cooldown_remaining': max(0, self.config.cooldown_steps - self.steps_since_emission),
+            'whisper_cooldown_remaining': max(0, self.whisper_cooldown - self.steps_since_whisper),
+            'emission_type': None,
+            'reason': None
+        }
+
+        # Check if we have enough history
+        if len(self.coherence_history) < 3:
+            diagnostics['reason'] = 'insufficient_history'
+            return False, diagnostics
+
+        # First, check for normal speech (peak coherence - original behavior)
+        if self.steps_since_emission >= self.config.cooldown_steps:
+            recent = list(self.coherence_history)
+            if recent[-2] > recent[-3] and recent[-2] > recent[-1]:
+                # Local maximum in coherence detected
+                if recent[-2] > self.whisper_high:  # Strong coherence
+                    self.steps_since_emission = 0
+                    self.steps_since_whisper = 0
+                    self.total_emissions += 1
+                    diagnostics['emission_type'] = 'speech'
+                    diagnostics['reason'] = 'coherence_peak'
+                    return True, diagnostics
+
+        # Check for whisper (moderate stable coherence)
+        if self.steps_since_whisper >= self.whisper_cooldown:
+            # Whisper criterion: coherence in intermediate range AND relatively stable
+            if self.whisper_low < coherence <= self.whisper_high:
+                # Check stability: not changing too rapidly
+                if len(self.coherence_history) >= 3:
+                    recent = list(self.coherence_history)
+                    coherence_change = abs(recent[-1] - recent[-2])
+
+                    # Emit whisper if coherence is stable in whisper range
+                    if coherence_change < 0.5:  # Stability threshold
+                        self.steps_since_whisper = 0
+                        self.whisper_emissions += 1
+                        diagnostics['emission_type'] = 'whisper'
+                        diagnostics['reason'] = 'whisper_stable_moderate_coherence'
+                        return True, diagnostics
+
+        # No emission
+        if coherence > self.whisper_high:
+            diagnostics['reason'] = 'coherence_increasing_toward_speech'
+        elif self.whisper_low < coherence <= self.whisper_high:
+            diagnostics['reason'] = 'whisper_zone_but_unstable'
+        else:
+            diagnostics['reason'] = 'coherence_too_low'
+
+        return False, diagnostics
+
+    def get_statistics(self) -> dict:
+        """Get emission statistics for both channels"""
+        total_time = max(len(self.time_history), 1)
+        return {
+            'total_emissions': self.total_emissions,
+            'whisper_emissions': self.whisper_emissions,
+            'speech_emissions': self.total_emissions - self.whisper_emissions,
+            'whisper_rate': self.whisper_emissions / total_time,
+            'speech_rate': (self.total_emissions - self.whisper_emissions) / total_time,
+            'total_rate': self.total_emissions / total_time
+        }
+
+
 if __name__ == "__main__":
     print("=== Emission Detector Test ===\n")
 

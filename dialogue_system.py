@@ -19,7 +19,7 @@ from recursive_engine import (
     RecursiveEngine, RecursiveParams, create_engine, FFTEngine
 )
 from emission_detector import (
-    EmissionDetector, EmissionConfig, PhaseCoherenceDetector
+    EmissionDetector, EmissionConfig, PhaseCoherenceDetector, WhisperCoherenceDetector
 )
 
 
@@ -39,6 +39,11 @@ class DialogueConfig:
     # Codebook parameters
     vocab_size: int = 1000  # Number of tokens in vocabulary
     use_coherence_detector: bool = True  # Use LoMI-based emission
+
+    # Whisper parameters
+    enable_whisper: bool = False  # Enable dual-channel (speech + whisper)
+    whisper_coherence_low: float = -5.0  # Lower bound for whisper emissions
+    whisper_coherence_high: float = -1.0  # Upper bound for whisper emissions
 
     # Feedback parameters
     feedback_decay: float = 0.9  # How much previous emission affects next state
@@ -208,7 +213,14 @@ class RecursiveDialogueEngine:
         )
 
         # Emission detector (I² layer)
-        if self.config.use_coherence_detector:
+        if self.config.enable_whisper:
+            # Use whisper-enabled dual-channel detector
+            self.detector = WhisperCoherenceDetector(
+                self.config.emission_config,
+                whisper_coherence_low=self.config.whisper_coherence_low,
+                whisper_coherence_high=self.config.whisper_coherence_high
+            )
+        elif self.config.use_coherence_detector:
             self.detector = PhaseCoherenceDetector(self.config.emission_config)
         else:
             self.detector = EmissionDetector(self.config.emission_config)
@@ -317,7 +329,8 @@ class RecursiveDialogueEngine:
                 'token': token_id,
                 'mu_state': mu_new.copy() if isinstance(mu_new, np.ndarray) else mu_new,
                 'diagnostics': diagnostics,
-                'coherence': self.lomi.compute_coherence(mu_new)
+                'coherence': self.lomi.compute_coherence(mu_new),
+                'emission_type': diagnostics.get('emission_type', 'speech')  # 'speech' or 'whisper'
             }
 
             self.emission_history.append(emission)
@@ -384,7 +397,13 @@ class RecursiveDialogueEngine:
                     t = emission['time']
                     token = emission['token']
                     coh = emission['coherence']
-                    print(f"t={t:4d} → Token {token:4d}  |  Coherence: {coh:.4f}")
+                    emission_type = emission.get('emission_type', 'speech')
+
+                    # Display whispers differently (lowercase/parentheses)
+                    if emission_type == 'whisper':
+                        print(f"t={t:4d} → (token {token:4d})  |  Coherence: {coh:.4f}  [whisper]")
+                    else:
+                        print(f"t={t:4d} → Token {token:4d}   |  Coherence: {coh:.4f}  [speech]")
 
         elapsed = time.time() - start_time
 
@@ -393,6 +412,14 @@ class RecursiveDialogueEngine:
             print(f"Completed in {elapsed:.2f}s")
             print(f"Total emissions: {len(emissions)}")
             print(f"Emission rate: {len(emissions)/n_steps:.3f} per step")
+
+            # Show whisper statistics if enabled
+            if self.config.enable_whisper and isinstance(self.detector, WhisperCoherenceDetector):
+                stats = self.detector.get_statistics()
+                print(f"  - Speech emissions: {stats['speech_emissions']}")
+                print(f"  - Whisper emissions: {stats['whisper_emissions']}")
+                print(f"  - Speech rate: {stats['speech_rate']:.4f} per step")
+                print(f"  - Whisper rate: {stats['whisper_rate']:.4f} per step")
 
         return emissions
 
