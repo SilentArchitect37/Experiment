@@ -61,12 +61,15 @@ This yields **conversation as a recursive resonance process**, not lookup-based 
 ### File Structure
 
 ```
-recursive_engine.py      # Core dynamics engine with optimizations
-emission_detector.py     # Entropy/coherence-based emission detection
-dialogue_system.py       # Full integrated system (TDL + LoMI + I²)
-benchmark.py            # Performance benchmarks
-requirements.txt        # Dependencies
-README.md              # This file
+recursive_engine.py            # Core dynamics engine with optimizations
+emission_detector.py           # Entropy/coherence-based emission detection
+dialogue_system.py             # Full integrated system (TDL + LoMI + I²)
+external_data_validator.py     # Multi-dimensional truth validation for external data
+advanced_engine.py             # RK4 integration and advanced numerical methods
+benchmark.py                   # Performance benchmarks
+requirements.txt               # Dependencies
+README.md                      # This file
+EXTERNAL_DATA_VALIDATION.md   # External data validation framework documentation
 ```
 
 ### Key Features
@@ -111,6 +114,54 @@ emissions = engine.converse(
     listener_callback=your_listener_function
 )
 ```
+
+#### 4. External Data Validator (`external_data_validator.py`)
+
+Evaluates external information sources for truthfulness using multi-dimensional coherence analysis:
+
+**Six Validation Dimensions:**
+
+- **Source Credibility (ρₛ)**: Evaluates historical accuracy, verification, credentials, and bias
+- **Internal Consistency (κᵢ)**: Detects logical contradictions within claims
+- **Cross-Reference Validation (ξᵣ)**: Compares against multiple independent sources
+- **Temporal Coherence (τₜ)**: Validates consistency over time
+- **Semantic Alignment (σₐ)**: Measures coherence with established knowledge
+- **Evidence Strength (εₑ)**: Quantifies quality and quantity of supporting evidence
+
+**Truth Score Formula:**
+
+```
+T(x) = Σᵢ wᵢ · Cᵢ(x) / Σᵢ wᵢ
+```
+
+Where Cᵢ are the six coherence measures. Data is accepted if T(x) > θ and uncertainty U(x) is low.
+
+```python
+from external_data_validator import ExternalDataValidator, DataSource, ExternalClaim
+
+# Create validator
+validator = ExternalDataValidator()
+
+# Define source
+source = DataSource(
+    name="Peer-Reviewed Journal",
+    historical_accuracy=0.90,
+    verification_score=0.95,
+    credential_score=0.95,
+    bias_score=0.05
+)
+
+# Validate claim
+claim = ExternalClaim(
+    embedding=claim_embedding,
+    source=source,
+    evidence=[(0.9, 0.95), (0.85, 0.90)]
+)
+
+truth_score, uncertainty, accept = validator.validate(claim)
+```
+
+See [EXTERNAL_DATA_VALIDATION.md](EXTERNAL_DATA_VALIDATION.md) for complete mathematical details.
 
 ## Installation
 
