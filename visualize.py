@@ -16,6 +16,7 @@ from matplotlib.animation import FuncAnimation
 from recursive_engine import create_engine, RecursiveParams
 from dialogue_system import RecursiveDialogueEngine, DialogueConfig
 from dialogue_system import create_oscillating_listener
+from image_viewer import view_image, view_images
 
 
 def plot_field_evolution(engine, n_steps: int = 200, n_snapshots: int = 5):
@@ -199,17 +200,29 @@ def plot_phase_space(engine, n_steps: int = 5000):
     return fig
 
 
-def demo_visualization():
-    """Run complete visualization demo"""
+def demo_visualization(display: bool = True):
+    """
+    Run complete visualization demo
+
+    Parameters:
+    -----------
+    display : bool, default True
+        If True, display images after saving them
+        If False, only save to disk (original behavior)
+    """
     print("=== Recursive Dialogue Engine Visualization Demo ===\n")
+
+    saved_files = []
 
     # 1. Field evolution
     print("1. Generating field evolution plot...")
     params = RecursiveParams(g=0.1, lam=0.3, rho=0.4, dt=0.01)
     engine = create_engine('fft', params, n_dims=256)
     fig1 = plot_field_evolution(engine, n_steps=200, n_snapshots=5)
-    fig1.savefig('field_evolution.png', dpi=150, bbox_inches='tight')
-    print("   Saved: field_evolution.png")
+    filename1 = 'field_evolution.png'
+    fig1.savefig(filename1, dpi=150, bbox_inches='tight')
+    saved_files.append(filename1)
+    print(f"   Saved: {filename1}")
 
     # 2. Entropy trajectory
     print("2. Generating entropy trajectory...")
@@ -224,8 +237,10 @@ def demo_visualization():
 
     dialogue = RecursiveDialogueEngine(config)
     fig2 = plot_entropy_trajectory(dialogue, n_steps=1000)
-    fig2.savefig('entropy_trajectory.png', dpi=150, bbox_inches='tight')
-    print("   Saved: entropy_trajectory.png")
+    filename2 = 'entropy_trajectory.png'
+    fig2.savefig(filename2, dpi=150, bbox_inches='tight')
+    saved_files.append(filename2)
+    print(f"   Saved: {filename2}")
 
     # 3. Run dialogue with listener and analyze
     print("3. Running dialogue simulation...")
@@ -237,27 +252,42 @@ def demo_visualization():
 
     if emissions:
         fig3 = plot_coherence_analysis(emissions)
-        fig3.savefig('coherence_analysis.png', dpi=150, bbox_inches='tight')
-        print("   Saved: coherence_analysis.png")
+        filename3 = 'coherence_analysis.png'
+        fig3.savefig(filename3, dpi=150, bbox_inches='tight')
+        saved_files.append(filename3)
+        print(f"   Saved: {filename3}")
 
     # 4. Phase space
     print("4. Generating phase space plot...")
     engine2 = create_engine('fft', params, n_dims=256)
     fig4 = plot_phase_space(engine2, n_steps=3000)
-    fig4.savefig('phase_space.png', dpi=150, bbox_inches='tight')
-    print("   Saved: phase_space.png")
+    filename4 = 'phase_space.png'
+    fig4.savefig(filename4, dpi=150, bbox_inches='tight')
+    saved_files.append(filename4)
+    print(f"   Saved: {filename4}")
 
     print("\n=== Visualization Complete ===")
     print("Generated files:")
-    print("  - field_evolution.png")
-    print("  - entropy_trajectory.png")
-    print("  - coherence_analysis.png")
-    print("  - phase_space.png")
+    for f in saved_files:
+        print(f"  - {f}")
+
+    # Display images if requested
+    if display and saved_files:
+        print("\n=== Displaying Images ===")
+        print("Close each window to view the next image...")
+        view_images(saved_files, cols=2, figsize=(16, 12))
 
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Recursive Dialogue Engine Visualization')
+    parser.add_argument('--no-display', action='store_true',
+                        help='Save images but do not display them')
+    args = parser.parse_args()
+
     try:
-        demo_visualization()
+        demo_visualization(display=not args.no_display)
     except Exception as e:
         print(f"Error: {e}")
         print("\nMake sure matplotlib is installed:")
