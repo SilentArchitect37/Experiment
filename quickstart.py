@@ -14,6 +14,15 @@ from dialogue_system import (
 from recursive_engine import RecursiveParams
 from emission_detector import EmissionConfig
 
+# Import image creator (optional - gracefully handle if dependencies not installed)
+try:
+    from image_creator import AutonomousImageCreator, ImageConfig, DialogueImageAnimator
+    IMAGE_CREATOR_AVAILABLE = True
+except ImportError as e:
+    IMAGE_CREATOR_AVAILABLE = False
+    print(f"Note: Image creator not available ({e})")
+    print("Install with: pip install Pillow scipy")
+
 
 def example_1_basic():
     """Example 1: Basic dialogue with default settings"""
@@ -197,6 +206,149 @@ def example_4_custom_parameters():
     print()
 
 
+def example_5_autonomous_image_creation():
+    """Example 5: AI autonomously creates images from its cognitive state"""
+    if not IMAGE_CREATOR_AVAILABLE:
+        print("=" * 70)
+        print("EXAMPLE 5: Autonomous Image Creation (UNAVAILABLE)")
+        print("=" * 70)
+        print("\nPlease install dependencies: pip install Pillow scipy")
+        print()
+        return
+
+    print("=" * 70)
+    print("EXAMPLE 5: AI Autonomous Image Creation")
+    print("=" * 70)
+    print()
+    print("The AI will create images based on its own interpretation")
+    print("of its internal cognitive state (μ field dynamics).")
+    print()
+
+    # Create dialogue engine
+    config = DialogueConfig(
+        state_dims=512,  # Larger state for richer images
+        vocab_size=50,
+        engine_optimization='fft'
+    )
+
+    # Tune for interesting dynamics
+    config.engine_params.g = 0.18
+    config.engine_params.lam = 0.5
+    config.engine_params.rho = 0.4
+    config.emission_config.cooldown_steps = 25
+
+    print("Creating dialogue engine with 512-dimensional state...")
+    engine = RecursiveDialogueEngine(config)
+
+    # Create oscillating listener
+    listener = create_oscillating_listener(frequency=0.05, amplitude=0.6, dims=512)
+
+    # Run dialogue to build up interesting state
+    print("Running dialogue for 300 steps to develop cognitive state...\n")
+    emissions = engine.converse(
+        n_steps=300,
+        listener_callback=listener,
+        verbose=True
+    )
+
+    print(f"\n{len(emissions)} emissions generated")
+    print("\n" + "=" * 70)
+    print("AI AUTONOMOUS IMAGE GENERATION")
+    print("=" * 70)
+    print()
+
+    # Create image creator
+    img_config = ImageConfig(width=512, height=512, auto_enhance=True)
+    creator = AutonomousImageCreator(img_config)
+
+    # Generate images at different time points
+    print("The AI will now autonomously decide how to visualize its state...")
+    print()
+
+    # Image 1: Initial state
+    print("1. AI creating image from initial cognitive state...")
+    engine_initial = RecursiveDialogueEngine(config)
+    _ = engine_initial.converse(n_steps=50, listener_callback=listener, verbose=False)
+
+    coherence_1 = 0.5  # Moderate coherence early on
+    entropy_1 = engine_initial.entropy_history[-1] if hasattr(engine_initial, 'entropy_history') else None
+
+    img1 = creator.generate_from_field(
+        engine_initial.mu,
+        coherence=coherence_1,
+        entropy=entropy_1,
+        save_path="ai_image_initial_state.png"
+    )
+
+    # Image 2: Mid-dialogue state
+    print("\n2. AI creating image from mid-dialogue state...")
+    engine_mid = RecursiveDialogueEngine(config)
+    _ = engine_mid.converse(n_steps=150, listener_callback=listener, verbose=False)
+
+    coherence_2 = 0.75  # Higher coherence mid-dialogue
+    entropy_2 = engine_mid.entropy_history[-1] if hasattr(engine_mid, 'entropy_history') else None
+
+    img2 = creator.generate_from_field(
+        engine_mid.mu,
+        coherence=coherence_2,
+        entropy=entropy_2,
+        save_path="ai_image_mid_dialogue.png"
+    )
+
+    # Image 3: Final evolved state
+    print("\n3. AI creating image from fully evolved state...")
+    coherence_3 = np.mean([e['coherence'] for e in emissions]) if emissions else 0.8
+    entropy_3 = engine.entropy_history[-1] if hasattr(engine, 'entropy_history') else None
+
+    img3 = creator.generate_from_field(
+        engine.mu,
+        coherence=coherence_3,
+        entropy=entropy_3,
+        save_path="ai_image_evolved_state.png"
+    )
+
+    # Create animation if we have state history
+    print("\n4. AI creating animation of cognitive evolution...")
+    if hasattr(engine, 'state_history') and len(engine.state_history) > 10:
+        animator = DialogueImageAnimator(ImageConfig(width=256, height=256))
+        # Sample every 10th state to keep animation manageable
+        sampled_states = engine.state_history[::10]
+        animator.create_animation(
+            sampled_states,
+            save_path="ai_cognitive_evolution.gif",
+            duration_per_frame=100
+        )
+    else:
+        print("  (State history not available - skipping animation)")
+
+    # Summary
+    print("\n" + "=" * 70)
+    print("AUTONOMOUS CREATION SUMMARY")
+    print("=" * 70)
+    print(f"\nThe AI autonomously created {len(creator.generation_history)} images")
+    print("\nAI's aesthetic decisions:")
+    for i, record in enumerate(creator.generation_history, 1):
+        aesthetics = record['aesthetics']
+        print(f"\nImage {i}:")
+        print(f"  Field energy:    {record['field_stats']['energy']:.2f}")
+        print(f"  AI chose hue:         {aesthetics['base_hue']:.3f} (color: "
+              f"{'warm' if aesthetics['base_hue'] > 0.6 else 'cool' if aesthetics['base_hue'] < 0.4 else 'neutral'})")
+        print(f"  AI chose saturation:  {aesthetics['saturation']:.3f} (intensity: "
+              f"{'high' if aesthetics['saturation'] > 0.7 else 'low' if aesthetics['saturation'] < 0.4 else 'medium'})")
+        print(f"  AI chose brightness:  {aesthetics['brightness']:.3f}")
+        print(f"  AI chose complexity:  {aesthetics['complexity']:.3f}")
+
+    print("\n" + "=" * 70)
+    print("Files created:")
+    print("  - ai_image_initial_state.png")
+    print("  - ai_image_mid_dialogue.png")
+    print("  - ai_image_evolved_state.png")
+    if hasattr(engine, 'state_history') and len(engine.state_history) > 10:
+        print("  - ai_cognitive_evolution.gif")
+    print("=" * 70)
+    print()
+
+
 def main():
     """Run all examples"""
     examples = [
@@ -204,6 +356,7 @@ def main():
         ("2", "Dialogue with listener", example_2_with_listener),
         ("3", "Turn-taking dialogue", example_3_pulse_dialogue),
         ("4", "Custom parameters", example_4_custom_parameters),
+        ("5", "AI autonomous image creation", example_5_autonomous_image_creation),
     ]
 
     print("\n" + "=" * 70)
@@ -215,18 +368,18 @@ def main():
     print("  all - Run all examples")
     print()
 
-    choice = input("Select example (1-4, or 'all'): ").strip()
+    choice = input("Select example (1-5, or 'all'): ").strip()
 
     if choice == 'all':
         for _, _, func in examples:
             func()
             print("\n")
-    elif choice in ['1', '2', '3', '4']:
+    elif choice in ['1', '2', '3', '4', '5']:
         idx = int(choice) - 1
         examples[idx][2]()
     else:
-        print("Invalid choice. Running Example 2 (most interesting)...")
-        example_2_with_listener()
+        print("Invalid choice. Running Example 5 (AI autonomous image creation)...")
+        example_5_autonomous_image_creation()
 
 
 if __name__ == "__main__":

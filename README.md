@@ -118,7 +118,10 @@ emissions = engine.converse(
 # Basic (CPU only)
 pip install numpy
 
-# Full (with GPU support)
+# With image creation capabilities
+pip install numpy Pillow scipy
+
+# Full (with GPU support and all features)
 pip install -r requirements.txt
 ```
 
@@ -194,6 +197,55 @@ for t in range(1000):
     mu = engine.step(input_vec=your_input)
     # ... process state
 ```
+
+### 4. Autonomous Image Creation
+
+The AI can autonomously create visual representations of its internal cognitive state:
+
+```python
+from image_creator import AutonomousImageCreator, ImageConfig
+
+# Create image creator
+config = ImageConfig(width=512, height=512, auto_enhance=True)
+creator = AutonomousImageCreator(config)
+
+# Generate image from current μ field state
+image = creator.generate_from_field(
+    mu=engine.mu,
+    coherence=0.75,
+    entropy=engine.entropy_history[-1],
+    save_path="ai_cognitive_state.png"
+)
+
+# Or generate directly from engine
+image = creator.generate_from_dialogue_state(
+    engine,
+    save_path="dialogue_visualization.png"
+)
+```
+
+**Key Features:**
+- **Autonomous Aesthetics**: AI decides colors, contrast, complexity based on field properties
+- **Coherence-Driven**: Visual saturation reflects phase coherence
+- **Entropy-Aware**: Composition complexity adapts to entropy levels
+- **Field-to-Image**: Converts μ field dynamics to spatial visual patterns
+
+**Example Usage:**
+```bash
+# Run the image creation demo
+python image_creator.py
+
+# Or use quickstart example 5
+python quickstart.py
+# Select option 5: AI autonomous image creation
+```
+
+The AI analyzes its μ field to determine:
+- **Hue**: Based on field skewness (warm vs cool colors)
+- **Saturation**: Based on field energy
+- **Brightness**: Based on mean field value
+- **Complexity**: Based on standard deviation
+- **Contrast**: Based on field variability
 
 ## Performance Analysis
 
