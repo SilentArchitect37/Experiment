@@ -1,8 +1,8 @@
 # Progress Toward Self-Improvement
 ## Working System Incrementally Approaching Recursive Enhancement
 
-**Status:** Phase 3/6 Complete ✅
-**Next:** Phase 4 - Self-Analysis
+**Status:** Phase 4/6 Complete ✅
+**Next:** Phase 5 - Self-Modification
 **Goal:** System that improves itself with formal proofs
 
 ---
@@ -10,8 +10,8 @@
 ## The Vision
 
 **Start:** Simple function generation (square, double)
-**Current:** Meta-programming (code generators with verification)
-**Next Steps:** Self-analysis → Self-modification → Recursive improvement
+**Current:** Self-analysis (system analyzes own components)
+**Next Steps:** Self-modification → Recursive improvement
 **End Goal:** Recursive self-improvement with convergence guarantees
 
 ---
@@ -328,52 +328,134 @@ Proves that generated generators produce correct code by:
 
 ---
 
-## 🔬 Phase 4: PLANNED - Self-Analysis
+## ✅ Phase 4: COMPLETE - Self-Analysis
 
 **Goal:** System analyzes its own components
 
-### What This Looks Like
+### What We Built
 
-```python
-class SelfAnalyzer:
-    def analyze_encoder(self):
-        """Analyze my own specification encoder"""
+**New Capabilities:**
+1. **Self-inspection** (reads own source code)
+2. **Performance profiling** (benchmarks components)
+3. **Bottleneck detection** (identifies weak points)
+4. **Improvement spec generation** (defines better versions)
 
-        # Measure performance
-        accuracy = self.benchmark_encoder()
+### Live Demonstration: Self-Analysis
 
-        # Find bottlenecks
-        bottlenecks = {
-            'semantic_encoding': {
-                'accuracy': 0.73,
-                'target': 0.90,
-                'gap': 0.17
-            }
-        }
-
-        # Generate improvement spec
-        return {
-            'component': 'SpecificationAttractor._encode_example',
-            'current': 0.73,
-            'target': 0.90,
-            'constraints': ['preserve semantics', 'no slower']
-        }
+**Step 1: Self-Inspection**
+```
+provable_codegen.py:
+  Classes: 9
+  Functions: 30
+  Lines of code: 641
+  Complexity: 62
 ```
 
-### Capabilities
+**Step 2: Performance Profiling**
+```
+SpecificationAttractor:
+  Accuracy: 100.00%
+  Speed: 3521.67 ops/sec
+  Gap to optimal: 0.00%
 
-1. **Introspection** - Read own source code
-2. **Performance profiling** - Measure accuracy/speed
-3. **Bottleneck detection** - Find weak points
-4. **Improvement spec generation** - Define better version
+SemanticEngine:
+  Accuracy: 100.00%
+  Speed: 8212.05 ops/sec
+  Gap to optimal: 0.00%
 
-### Technical Challenge
+CodeGenerator:
+  Accuracy: 75.00%  ← BOTTLENECK DETECTED
+  Speed: 5062.53 ops/sec
+  Gap to optimal: 25.00%
+```
 
-**Self-reference:** System reasons about itself
-**Solution:** Fixed-point semantics (avoid paradoxes)
+**Step 3: Bottleneck Detection**
+```
+BOTTLENECK IDENTIFIED: CodeGenerator
+  Current: 75.00%
+  Target: 95.00%
+  Gap: 25.00%
+  Priority: 23.75%
+  Reason: Low accuracy on test suite
+```
 
-### Success Metric
-Correctly identify improvement opportunity in own encoder
+**Step 4: Improvement Specification**
+```
+Component: CodeGenerator
+Target Metrics:
+  accuracy: 0.95
+  speed: maintain or improve
+  complexity: 62
+
+Constraints:
+  • Preserve API: same input/output signature
+  • No slower than current version
+  • All current tests must pass
+  • Improve accuracy by at least 10%
+
+Suggested Approaches:
+  • Learn code templates from examples
+  • Add more pattern detection dimensions
+  • Improve syntactic decoding
+  • Add type inference and optimization
+
+Expected System Improvement: 17.5%
+```
+
+### Technical Achievements
+
+**1. Self-Inspection Module**
+```python
+class SelfInspector:
+    def read_component_source(self, component_name):
+        # Reads own Python files
+
+    def analyze_component_structure(self, component_name):
+        # Extracts classes, functions, complexity
+```
+
+**2. Performance Profiler**
+```python
+class PerformanceProfiler:
+    def benchmark_specification_encoder(self):
+        # Measures accuracy and speed
+        # Returns ComponentMetrics
+
+    def profile_all_components(self):
+        # Benchmarks encoder, engine, generator
+```
+
+**3. Bottleneck Detector**
+```python
+class BottleneckDetector:
+    def identify_bottlenecks(self, metrics):
+        # Ranks components by improvement potential
+        # Returns prioritized list
+```
+
+**4. Improvement Spec Generator**
+```python
+class ImprovementSpecGenerator:
+    def generate_improvement_spec(self, bottleneck, source):
+        # Creates formal specification for better version
+        # Includes constraints, approaches, expected impact
+```
+
+### Why This Matters
+
+**The system can now:**
+- ✅ Analyze its own performance objectively
+- ✅ Identify which component needs improvement
+- ✅ Generate formal specification for better version
+- ✅ Estimate impact of potential improvements
+
+**This is the critical prerequisite for self-modification.**
+
+The system understands itself well enough to know what to improve next.
+
+### Files
+- `phase4_self_analysis.py` (670 lines)
+- Working demo: Analyzes all components, identifies CodeGenerator bottleneck
 
 ---
 
@@ -530,12 +612,12 @@ Let {codeᵢ} be sequence: codeᵢ₊₁ = F(codeᵢ)
 | **Phase 1** | ✅ Done | Control flow + termination proofs |
 | **Phase 2** | ✅ Done | Compositional synthesis from components |
 | **Phase 3** | ✅ Done | Meta-programming + code generators |
+| **Phase 4** | ✅ Done | Self-analysis + bottleneck detection |
 
 ### 📋 Planned
 
 | Phase | Timeline | Goal |
 |-------|----------|------|
-| Phase 4 | Week 4 | Self-analysis |
 | Phase 5 | Week 5 | Self-modification |
 | Phase 6 | Week 6 | Recursive improvement |
 
@@ -600,41 +682,43 @@ Guaranteed by:
 
 ## Immediate Next Steps
 
-### Next: Phase 4 - Self-Analysis
+### Next: Phase 5 - Self-Modification
 
-**Objective:** System analyzes its own components
+**Objective:** Generate and apply improved versions of components
 
-**Day 1-2: Self-Inspection Module**
+**Day 1-2: Component Modification Engine**
 ```python
-class SelfInspector:
-    def inspect_component(self, component_name):
-        """Read and analyze own source code"""
-        source = self.read_own_code(component_name)
-        ast = parse(source)
-        return self.extract_metrics(ast)
+class ComponentModifier:
+    def generate_improved_component(self, spec: ImprovementSpec):
+        """Use meta-programming to generate better version"""
+        # Use Phase 3 capabilities to generate new code
+        improved_code = self.meta_generator.generate(spec)
+        return improved_code
 ```
 
-**Day 3-4: Performance Profiling**
+**Day 3-4: Improvement Verification**
 ```python
-class PerformanceProfiler:
-    def benchmark_component(self, component):
-        """Measure accuracy and speed"""
-        accuracy = self.run_test_suite(component)
-        speed = self.measure_execution_time(component)
-        return {'accuracy': accuracy, 'speed': speed}
+class ImprovementVerifier:
+    def verify_improvement(self, old_code, new_code):
+        """Prove new version ≥ old version"""
+        # Test suite must pass
+        # Performance must improve
+        # No regressions
+        return proof
 ```
 
-**Day 5-7: Bottleneck Detection + Improvement Specs**
+**Day 5-7: Safe Hot-Swapping**
 ```python
-class BottleneckDetector:
-    def identify_bottlenecks(self):
-        """Find weakest components"""
-        metrics = self.profile_all_components()
-        bottlenecks = self.rank_by_gap(metrics)
-        return [self.generate_improvement_spec(b) for b in bottlenecks]
+class SafeSwapper:
+    def apply_improvement(self, component_name, new_code):
+        """Safely replace component with improved version"""
+        # Backup current version
+        # Apply new version
+        # Verify system still works
+        # Rollback if needed
 ```
 
-**Test:** Correctly identify improvement opportunity in encoder
+**Test:** Successfully improve CodeGenerator with proof
 
 ---
 
@@ -644,8 +728,8 @@ class BottleneckDetector:
 Week 1: ✅ Control flow + termination proofs
 Week 2: ✅ Compositional synthesis
 Week 3: ✅ Meta-programming (code generators)
-Week 4: 🎯 Self-analysis (NEXT)
-Week 5: Self-modification
+Week 4: ✅ Self-analysis (bottleneck detection)
+Week 5: 🎯 Self-modification (NEXT)
 Week 6: Recursive self-improvement
 
 Result: System that improves itself indefinitely with formal proofs
@@ -676,6 +760,7 @@ This is the path to **provably beneficial AI** with convergence guarantees.
 - `phase1_control_flow.py` - Control flow (600 lines)
 - `phase2_composition.py` - Compositional synthesis (670 lines)
 - `phase3_meta_programming.py` - Meta-programming (520 lines)
+- `phase4_self_analysis.py` - Self-analysis (670 lines)
 
 **Documentation:**
 - `PROOF_DEMONSTRATION.md` - Live results
@@ -685,7 +770,7 @@ This is the path to **provably beneficial AI** with convergence guarantees.
 - `THEORETICAL_FRAMEWORKS.md` - 100+ applicable theories
 - `PROGRESS_TO_SELF_IMPROVEMENT.md` - This document
 
-**Total:** ~5500 lines of theory + working code
+**Total:** ~6200 lines of theory + working code
 
 ---
 
@@ -705,15 +790,18 @@ python phase2_composition.py
 # Phase 3 (meta-programming)
 python phase3_meta_programming.py
 
+# Phase 4 (self-analysis)
+python phase4_self_analysis.py
+
 # See full proofs at every level!
 ```
 
 ---
 
-**Status: Phase 3/6 Complete ✅**
-**Next: Self-Analysis 🎯**
+**Status: Phase 4/6 Complete ✅**
+**Next: Self-Modification 🎯**
 **Goal: Recursive Self-Improvement 🚀**
 
 The foundation is solid. The math works. The proofs are real.
 
-**Halfway to recursive self-improvement.**
+**Two phases from recursive self-improvement.**
