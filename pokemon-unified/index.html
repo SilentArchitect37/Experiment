@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gen III Unified</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true"></span>
+      <div>
+        <h1>Gen III Unified</h1>
+        <p class="muted">Kanto &amp; Hoenn — five cartridges, one journey</p>
+      </div>
+    </div>
+    <div id="trainer-strip" class="trainer-strip"></div>
+  </header>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="journey" aria-selected="true">Journey</button>
+    <button role="tab" data-tab="cartridges">Cartridges</button>
+    <button role="tab" data-tab="dex">Pokédex</button>
+    <button role="tab" data-tab="bank">Pokémon Bank</button>
+    <button role="tab" data-tab="settings">Settings</button>
+  </nav>
+  <div id="banner" class="banner" hidden></div>
+  <main id="view"></main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

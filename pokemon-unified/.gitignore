@@ -1,0 +1,9 @@
+# Never commit game data: ROMs, saves, save states or archives of them.
+*.gba
+*.sav
+*.srm
+*.fla
+*.state
+*.zip
+vendor/
+node_modules/

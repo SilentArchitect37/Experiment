@@ -1,0 +1,10 @@
+{
+  "name": "gen3-unified",
+  "private": true,
+  "type": "module",
+  "description": "Play Ruby, Sapphire, Emerald, FireRed and LeafGreen as one connected journey in the browser.",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node --test tests/*.test.mjs"
+  }
+}
